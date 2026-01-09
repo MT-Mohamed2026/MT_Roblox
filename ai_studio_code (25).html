@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROJECT: MT_HORROR | COMPLETE SOURCE</title>
+    
+    <!-- Assets -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Nosifer&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+
+    <style>
+        :root {
+            --bg: #020202;
+            --panel: #0d0d0d;
+            --border: #333;
+            --primary: #ff003c; /* Cyberpunk Red */
+            --accent: #00f0ff; /* Cyberpunk Blue */
+            --text: #a0a0a0;
+            --code-bg: #080808;
+        }
+
+        /* CRT SCANLINE OVERLAY */
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: repeating-linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.15) 1px, transparent 1px, transparent 2px);
+            pointer-events: none;
+            z-index: 999;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Share Tech Mono', monospace;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* HEADER */
+        header {
+            background: linear-gradient(90deg, #000 0%, #1a0505 50%, #000 100%);
+            padding: 40px;
+            text-align: center;
+            border-bottom: 2px solid var(--primary);
+            box-shadow: 0 0 20px rgba(255, 0, 60, 0.2);
+            position: relative;
+        }
+
+        h1 {
+            font-family: 'Nosifer', cursive;
+            color: var(--primary);
+            font-size: 3rem;
+            margin: 0;
+            text-shadow: 2px 2px 0px #fff;
+            animation: shake 3s infinite;
+        }
+
+        .status-badge {
+            background: var(--accent);
+            color: #000;
+            padding: 5px 10px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            border-radius: 2px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        @keyframes shake {
+            0% { transform: skewX(-10deg); }
+            5% { transform: skewX(10deg); }
+            10% { transform: skewX(-10deg); }
+            15% { transform: skewX(10deg); }
+            20% { transform: skewX(0deg); }
+            100% { transform: skewX(0deg); }
+        }
+
+        /* LAYOUT */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 40px;
+        }
+
+        /* SIDEBAR: FILE MAP */
+        .sidebar {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            padding: 0;
+            height: fit-content;
+        }
+
+        .sidebar-title {
+            background: #151515;
+            padding: 15px;
+            color: #fff;
+            border-bottom: 1px solid var(--border);
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .file-tree {
+            list-style: none;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .file-tree li {
+            margin-bottom: 12px;
+            position: relative;
+            padding-left: 20px;
+        }
+        
+        .file-tree li::before {
+            content: "├─";
+            position: absolute;
+            left: 0;
+            color: #444;
+        }
+
+        .icon { margin-right: 8px; width: 20px; text-align: center; }
+        .folder { color: #f1c40f; }
+        .script-server { color: #2ecc71; }
+        .script-client { color: #3498db; }
+        .model { color: #e74c3c; }
+        .event { color: #9b59b6; }
+
+        /* MAIN CARDS */
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            margin-bottom: 50px;
+            position: relative;
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 10px; height: 10px;
+            border-top: 2px solid var(--primary);
+            border-left: 2px solid var(--primary);
+        }
+
+        .card-header {
+            background: #111;
+            padding: 15px 25px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .location-tag {
+            font-size: 0.8rem;
+            color: #666;
+            margin-left: 10px;
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .card-body { padding: 0; }
+
+        /* EXPLANATION SECTION (DECLASSIFIED) */
+        .declassified {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .intel-text {
+            padding: 25px;
+            background: #0a0a0a;
+            color: #ccc;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .intel-text h4 {
+            color: var(--accent);
+            margin-top: 0;
+            border-bottom: 1px dashed var(--border);
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* VISUAL MOCKUPS (The "Photos") */
+        .mockup-container {
+            background: #000;
+            border-left: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Mockup: Data Flow */
+        .flow-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+        .flow-box {
+            border: 1px solid var(--primary);
+            padding: 5px 10px;
+            font-size: 0.7rem;
+            color: var(--primary);
+        }
+        .flow-arrow { color: #fff; font-size: 10px; }
+
+        /* Mockup: AI Vision */
+        .ai-vision {
+            width: 150px; height: 150px;
+            border: 1px dashed #333;
+            position: relative;
+            background: radial-gradient(circle at center, rgba(255,0,0,0.1) 0%, transparent 70%);
+        }
+        .ai-dot {
+            width: 10px; height: 10px; background: red;
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px red;
+        }
+        .raycast-line {
+            width: 60px; height: 1px; background: red;
+            position: absolute; top: 50%; left: 50%;
+            transform-origin: left;
+            animation: scan 2s infinite linear;
+        }
+        @keyframes scan { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* CODE BLOCKS */
+        pre { margin: 0 !important; max-height: 450px; border: none !important; background: var(--code-bg) !important; }
+        
+        .copy-btn {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 5px 15px;
+            cursor: pointer;
+            font-family: 'Share Tech Mono';
+            transition: 0.2s;
+        }
+        .copy-btn:hover { background: var(--accent); color: #000; box-shadow: 0 0 15px var(--accent); }
+
+        footer {
+            margin-top: auto;
+            text-align: center;
+            padding: 30px;
+            color: #444;
+            border-top: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>MT_HORROR_ENGINE</h1>
+        <div class="status-badge">STATUS: FULL SOURCE RELEASED</div>
+        <p style="color: #666; margin-top: 10px;">SYSTEM ARCHITECT: USER // PLATFORM: ROBLOX STUDIO</p>
+    </header>
+
+    <div class="container">
+        
+        <!-- SIDEBAR: WHERE TO PUT FILES -->
+        <aside class="sidebar">
+            <div class="sidebar-title">
+                <span><i class="fas fa-sitemap"></i> INSTALLATION MAP</span>
+            </div>
+            <ul class="file-tree">
+                <!-- REPLICATED STORAGE -->
+                <li><i class="fas fa-box icon folder"></i> ReplicatedStorage
+                    <ul style="list-style:none; padding-left:20px; margin-top:5px;">
+                        <li><i class="fas fa-folder icon folder"></i> Events
+                            <ul style="list-style:none; padding-left:20px; margin-top:5px;">
+                                <li><i class="fas fa-bolt icon event"></i> StatusEvent</li>
+                                <li><i class="fas fa-bolt icon event"></i> JoinEvent</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+                
+                <!-- SERVER SCRIPT SERVICE -->
+                <li><i class="fas fa-server icon folder"></i> ServerScriptService
+                    <ul style="list-style:none; padding-left:20px; margin-top:5px;">
+                        <li><i class="fas fa-file-code icon script-server"></i> <b>GameManager</b> <span style="color:var(--primary); font-size:10px;">(SCRIPT 1)</span></li>
+                    </ul>
+                </li>
+
+                <!-- SERVER STORAGE -->
+                <li><i class="fas fa-database icon folder"></i> ServerStorage
+                    <ul style="list-style:none; padding-left:20px; margin-top:5px;">
+                        <li><i class="fas fa-folder icon folder"></i> Assets
+                            <ul style="list-style:none; padding-left:20px; margin-top:5px;">
+                                <li><i class="fas fa-user-secret icon model"></i> Killer (Model)
+                                    <ul style="list-style:none; padding-left:20px; margin-top:5px;">
+                                        <li><i class="fas fa-file-code icon script-server"></i> <b>AI_Logic</b> <span style="color:var(--primary); font-size:10px;">(SCRIPT 2)</span></li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+
+                <!-- STARTER GUI -->
+                <li><i class="fas fa-desktop icon folder"></i> StarterGui
+                    <ul style="list-style:none; padding-left:20px; margin-top:5px;">
+                        <li><i class="fas fa-folder icon folder"></i> MainUI
+                            <ul style="list-style:none; padding-left:20px; margin-top:5px;">
+                                <li><i class="fas fa-file-code icon script-client"></i> <b>ClientHandler</b> <span style="color:var(--primary); font-size:10px;">(SCRIPT 3)</span></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            <div style="padding:15px; background:#111; color:#555; font-size:0.8rem;">
+                <i class="fas fa-info-circle"></i> Create these Folders and RemoteEvents exactly as shown before pasting the scripts.
+            </div>
+        </aside>
+
+        <main>
+
+            <!-- SCRIPT 1: GAME MANAGER -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <span class="card-title"><i class="fas fa-brain"></i> SCRIPT 1: GAMEMANAGER</span>
+                        <div class="location-tag">LOCATION: ServerScriptService > Script</div>
+                    </div>
+                    <button class="copy-btn" onclick="copy('code1')">COPY DATA</button>
+                </div>
+                <div class="card-body">
+                    <pre><code id="code1" class="language-lua">--[[ 
+    SYSTEM: MAIN GAME BRAIN 
+    LOCATION: ServerScriptService
+]]
+
+local Services = {
+    RS = game:GetService("ReplicatedStorage"),
+    SS = game:GetService("ServerStorage"),
+    Plrs = game:GetService("Players"),
+    WS = game:GetService("Workspace"),
+    DS = game:GetService("DataStoreService")
+}
+
+local MoneyStore = Services.DS:GetDataStore("Horror_V5")
+local Events = Services.RS:WaitForChild("Events")
+local Assets = Services.SS:WaitForChild("Assets")
+
+local Config = {
+    Intermission = 20,
+    RoundTime = 120,
+    MapSize = 14
+}
+
+local GameRunning = false
+local ActivePlayers = {}
+
+-- [[ 1. DATASTORE (SAVING MONEY) ]]
+Services.Plrs.PlayerAdded:Connect(function(player)
+    local leaderstats = Instance.new("Folder", player)
+    leaderstats.Name = "leaderstats"
+    
+    local cash = Instance.new("IntValue", leaderstats)
+    cash.Name = "Cash"
+    
+    local success, data = pcall(function()
+        return MoneyStore:GetAsync(player.UserId)
+    end)
+    
+    if success and data then
+        cash.Value = data
+    else
+        cash.Value = 0
+    end
+end)
+
+Services.Plrs.PlayerRemoving:Connect(function(player)
+    pcall(function()
+        MoneyStore:SetAsync(player.UserId, player.leaderstats.Cash.Value)
+    end)
+end)
+
+-- [[ 2. MAP GENERATOR ]]
+function GenerateMap()
+    if Services.WS:FindFirstChild("GameMap") then Services.WS.GameMap:Destroy() end
+    
+    local map = Instance.new("Model", Services.WS)
+    map.Name = "GameMap"
+    
+    local cellSize = 15
+    
+    -- Floor
+    local floor = Instance.new("Part", map)
+    floor.Size = Vector3.new(Config.MapSize*cellSize, 1, Config.MapSize*cellSize)
+    floor.Position = Vector3.new((Config.MapSize*cellSize)/2, -1, (Config.MapSize*cellSize)/2)
+    floor.Anchored = true
+    floor.Color = Color3.fromRGB(10,10,10)
+    
+    -- Maze Algorithm
+    for x = 1, Config.MapSize do
+        for z = 1, Config.MapSize do
+            if math.random() > 0.75 then -- 25% chance of wall
+                local wall = Instance.new("Part", map)
+                wall.Size = Vector3.new(cellSize, 12, cellSize)
+                wall.Position = Vector3.new(x*cellSize, 6, z*cellSize)
+                wall.Anchored = true
+                wall.Color = Color3.fromRGB(40,0,0)
+                wall.Material = Enum.Material.CorrodedMetal
+            end
+        end
+    end
+    return map, cellSize
+end
+
+-- [[ 3. MAIN LOOP ]]
+task.spawn(function()
+    while true do
+        -- A. INTERMISSION
+        for i = Config.Intermission, 0, -1 do
+            Events.StatusEvent:FireAllClients("NEXT ROUND: "..i, false)
+            task.wait(1)
+        end
+        
+        -- B. START ROUND
+        ActivePlayers = {}
+        for _, p in pairs(Services.Plrs:GetPlayers()) do
+            if p.Character then table.insert(ActivePlayers, p) end
+        end
+        
+        if #ActivePlayers > 0 then
+            local map, cell = GenerateMap()
+            
+            -- Teleport Players
+            for _, p in pairs(ActivePlayers) do
+                p.Character:SetPrimaryPartCFrame(CFrame.new(Vector3.new(cell*2, 5, cell*2)))
+            end
+            
+            task.wait(2)
+            
+            -- Spawn Killer
+            local k = Assets.Killer:Clone()
+            k.Parent = map
+            k:SetPrimaryPartCFrame(CFrame.new(Vector3.new(cell*Config.MapSize, 5, cell*Config.MapSize)))
+            
+            -- C. GAMEPLAY LOOP
+            for i = Config.RoundTime, 0, -1 do
+                Events.StatusEvent:FireAllClients("SURVIVE: "..i, true)
+                
+                -- Check Life count
+                local alive = 0
+                for _, p in pairs(ActivePlayers) do
+                    if p.Character and p.Character.Humanoid.Health > 0 then alive += 1 end
+                end
+                
+                if alive == 0 then break end
+                task.wait(1)
+            end
+            
+            -- D. REWARDS
+            for _, p in pairs(ActivePlayers) do
+                if p.Character and p.Character.Humanoid.Health > 0 then
+                    p.leaderstats.Cash.Value += 100 -- Win Reward
+                end
+                p:LoadCharacter() -- Respawn
+            end
+        else
+            Events.StatusEvent:FireAllClients("NEED MORE PLAYERS", false)
+            task.wait(5)
+        end
+    end
+end)</code></pre>
+                </div>
+                <!-- DECLASSIFIED SECTION -->
+                <div class="declassified">
+                    <div class="intel-text">
+                        <h4><i class="fas fa-network-wired"></i> DECLASSIFIED DATA: THE SERVER BRAIN</h4>
+                        <p>This script controls the entire universe. It creates the map from scratch every round using a grid algorithm (similar to Minecraft chunk generation but simpler).</p>
+                        <p><b>DataStore:</b> Notice the `pcall` function. This safeguards the data saving. If Roblox servers crash, the `pcall` prevents your entire script from breaking, ensuring game stability.</p>
+                    </div>
+                    <div class="mockup-container">
+                        <div class="flow-chart">
+                            <div class="flow-box">INTERMISSION (20s)</div>
+                            <div class="flow-arrow">⬇</div>
+                            <div class="flow-box">GENERATE MAP</div>
+                            <div class="flow-arrow">⬇</div>
+                            <div class="flow-box">TELEPORT & SPAWN AI</div>
+                            <div class="flow-arrow">⬇</div>
+                            <div class="flow-box">LOOP UNTIL DEATH OR TIME</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCRIPT 2: KILLER AI -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <span class="card-title"><i class="fas fa-skull-crossbones"></i> SCRIPT 2: AI LOGIC</span>
+                        <div class="location-tag">LOCATION: ServerStorage > Assets > Killer (Model) > Script</div>
+                    </div>
+                    <button class="copy-btn" onclick="copy('code2')">COPY DATA</button>
+                </div>
+                <div class="card-body">
+                    <pre><code id="code2" class="language-lua">--[[ 
+    SYSTEM: KILLER AI (PATHFINDING)
+    LOCATION: Inside the Killer Model
+]]
+
+local killer = script.Parent
+local hum = killer:WaitForChild("Humanoid")
+local root = killer:WaitForChild("HumanoidRootPart")
+local PathService = game:GetService("PathfindingService")
+local Players = game:GetService("Players")
+
+-- CONFIG
+hum.WalkSpeed = 16 -- Slightly faster than player (16 is default)
+local Damage = 100 -- Instant kill
+
+function FindTarget()
+    local target = nil
+    local dist = 500 -- Max View Distance
+    
+    for _, p in pairs(Players:GetPlayers()) do
+        if p.Character and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+            local vector = (p.Character.HumanoidRootPart.Position - root.Position)
+            if vector.Magnitude < dist then
+                dist = vector.Magnitude
+                target = p.Character
+            end
+        end
+    end
+    return target
+end
+
+function Hunt()
+    while killer.Parent do
+        local prey = FindTarget()
+        
+        if prey then
+            -- 1. Create Path
+            local path = PathService:CreatePath({
+                AgentRadius = 2,
+                AgentHeight = 5,
+                AgentCanJump = true
+            })
+            
+            -- 2. Calculate
+            local success, errorMessage = pcall(function()
+                path:ComputeAsync(root.Position, prey.HumanoidRootPart.Position)
+            end)
+            
+            -- 3. Move
+            if success and path.Status == Enum.PathStatus.Success then
+                local waypoints = path:GetWaypoints()
+                -- Skip index 1 (current pos), go to index 2
+                if waypoints[2] then
+                    hum:MoveTo(waypoints[2].Position)
+                    if waypoints[2].Action == Enum.PathWaypointAction.Jump then
+                        hum.Jump = true
+                    end
+                end
+            else
+                -- Fallback: Run straight at them if path fails
+                hum:MoveTo(prey.HumanoidRootPart.Position)
+            end
+            
+            -- 4. Attack
+            if (prey.HumanoidRootPart.Position - root.Position).Magnitude < 4 then
+                prey.Humanoid:TakeDamage(Damage)
+                -- Optional: Play Jumpscare Sound Here
+            end
+        else
+            -- Wander randomly if no player
+            hum:MoveTo(root.Position + Vector3.new(math.random(-20,20), 0, math.random(-20,20)))
+        end
+        task.wait(0.1) -- Reaction time
+    end
+end
+
+task.wait(1) -- Wait for spawn
+Hunt()</code></pre>
+                </div>
+                <div class="declassified">
+                    <div class="intel-text">
+                        <h4><i class="fas fa-eye"></i> DECLASSIFIED DATA: PATHFINDING</h4>
+                        <p>This script makes the Killer smart. It doesn't just walk in a straight line (which would get stuck on walls). It uses `ComputeAsync` to draw a mathematical line around obstacles.</p>
+                        <p><b>Reaction Time:</b> The `task.wait(0.1)` at the bottom is the "brain speed". Lower numbers make the AI smarter but cause more lag. 0.1 is the sweet spot.</p>
+                    </div>
+                    <div class="mockup-container">
+                        <div class="ai-vision">
+                            <div class="ai-dot"></div>
+                            <div class="raycast-line"></div>
+                        </div>
+                        <div style="position:absolute; bottom:10px; color:#fff; font-size:0.7rem;">SCANNING FOR PLAYERS...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCRIPT 3: CLIENT UI -->
+            <div class="card">
+                <div class="card-header">
+                    <div>
+                        <span class="card-title"><i class="fas fa-desktop"></i> SCRIPT 3: CLIENT HANDLER</span>
+                        <div class="location-tag">LOCATION: StarterGui > MainUI > LocalScript</div>
+                    </div>
+                    <button class="copy-btn" onclick="copy('code3')">COPY DATA</button>
+                </div>
+                <div class="card-body">
+                    <pre><code id="code3" class="language-lua">--[[ 
+    SYSTEM: CLIENT VISUALS & AUDIO
+    LOCATION: StarterGui > LocalScript
+]]
+
+local RS = game:GetService("ReplicatedStorage")
+local TS = game:GetService("TweenService")
+local Events = RS:WaitForChild("Events")
+local Player = game.Players.LocalPlayer
+local UI = script.Parent
+
+-- GENERATE UI (Automatic)
+local statusLabel = Instance.new("TextLabel", UI)
+statusLabel.Size = UDim2.new(1, 0, 0.1, 0)
+statusLabel.Position = UDim2.new(0, 0, 0, 0)
+statusLabel.BackgroundTransparency = 1
+statusLabel.TextColor3 = Color3.new(1, 1, 1)
+statusLabel.Font = Enum.Font.Jura -- Sci-Fi/Horror Font
+statusLabel.TextSize = 35
+statusLabel.Text = "INITIALIZING..."
+
+-- EFFECTS
+local Lighting = game:GetService("Lighting")
+Lighting.Ambient = Color3.new(0,0,0)
+Lighting.Brightness = 0
+Lighting.FogColor = Color3.new(0.1, 0, 0)
+Lighting.FogEnd = 50 -- Very thick fog
+
+-- EVENTS
+Events.StatusEvent.OnClientEvent:Connect(function(msg, dangerMode)
+    statusLabel.Text = msg
+    
+    if dangerMode then
+        -- Panic Animation
+        TS:Create(statusLabel, TweenInfo.new(0.5), {
+            TextColor3 = Color3.fromRGB(255, 0, 0),
+            TextSize = 40
+        }):Play()
+        Lighting.FogColor = Color3.new(0.2, 0, 0) -- Red Fog
+    else
+        -- Calm Animation
+        TS:Create(statusLabel, TweenInfo.new(0.5), {
+            TextColor3 = Color3.fromRGB(255, 255, 255),
+            TextSize = 35
+        }):Play()
+        Lighting.FogColor = Color3.new(0, 0, 0) -- Black Fog
+    end
+end)</code></pre>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <footer>
+        MT HORROR FRAMEWORK V5 // END OF TRANSMISSION
+    </footer>
+
+    <!-- LOGIC FOR COPY BUTTONS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-lua.min.js"></script>
+    <script>
+        function copy(id) {
+            const el = document.getElementById(id);
+            navigator.clipboard.writeText(el.innerText).then(() => {
+                alert(">> DATA TRANSFERRED TO CLIPBOARD");
+            });
+        }
+    </script>
+</body>
+</html>
